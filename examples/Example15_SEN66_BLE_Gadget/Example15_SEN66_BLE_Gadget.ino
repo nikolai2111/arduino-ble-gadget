@@ -1,5 +1,5 @@
-// Please install the Sensirion I2C Arduino library for the SEN55 sensor module, before
-// using this example code:
+// Please install the Sensirion I2C Arduino library for the SEN55 sensor module,
+// before using this example code:
 // https://github.com/Sensirion/arduino-i2c-sen6x
 #include "Sensirion_Gadget_BLE.h"
 #include <SensirionI2cSen66.h>
@@ -76,7 +76,6 @@ void printSerialNumber() {
     }
 }
 
-
 void setup() {
 
     Serial.begin(115200);
@@ -118,12 +117,12 @@ void setup() {
 }
 
 void loop() {
-  if (millis() - lastMeasurementTimeMs >= measurementIntervalMs) {
-    measure_and_report();
-  }
+    if (millis() - lastMeasurementTimeMs >= measurementIntervalMs) {
+        measure_and_report();
+    }
 
-  provider.handleDownload();
-  delay(20); 
+    provider.handleDownload();
+    delay(20);
 }
 
 void measure_and_report() {
@@ -185,12 +184,15 @@ void measure_and_report() {
         }
     }
 
-    provider.writeValueToCurrentSample(ambientTemperature, SignalType::TEMPERATURE_DEGREES_CELSIUS);
-    provider.writeValueToCurrentSample(ambientHumidity, SignalType::RELATIVE_HUMIDITY_PERCENTAGE);
+    provider.writeValueToCurrentSample(ambientTemperature,
+                                       SignalType::TEMPERATURE_DEGREES_CELSIUS);
+    provider.writeValueToCurrentSample(
+        ambientHumidity, SignalType::RELATIVE_HUMIDITY_PERCENTAGE);
     provider.writeValueToCurrentSample(co2, SignalType::CO2_PARTS_PER_MILLION);
     provider.writeValueToCurrentSample(vocIndex, SignalType::VOC_INDEX);
     provider.writeValueToCurrentSample(noxIndex, SignalType::NOX_INDEX);
-    provider.writeValueToCurrentSample(massConcentrationPm2p5, SignalType::PM2P5_MICRO_GRAMM_PER_CUBIC_METER);
+    provider.writeValueToCurrentSample(
+        massConcentrationPm2p5, SignalType::PM2P5_MICRO_GRAMM_PER_CUBIC_METER);
 
     provider.commitSample();
     lastMeasurementTimeMs = millis();
