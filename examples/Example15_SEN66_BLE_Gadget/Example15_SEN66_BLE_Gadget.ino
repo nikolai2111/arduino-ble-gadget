@@ -1,16 +1,16 @@
 // Please install the Sensirion I2C Arduino library for the SEN55 sensor module, before
 // using this example code:
-// https://github.com/Sensirion/arduino-i2c-sen5x
+// https://github.com/Sensirion/arduino-i2c-sen6x
 #include "Sensirion_Gadget_BLE.h"
-#include <SensirionI2CSen5x.h>
+#include <SensirionI2cSen66.h>
 
-SensirionI2CSen5x sen5x;
+SensirionI2cSen66 sen6x;
 
 // GadgetBle workflow
 static int64_t lastMeasurementTimeMs = 0;
 static int measurementIntervalMs = 1000;
 NimBLELibraryWrapper lib;
-DataProvider provider(lib, DataType::T_RH_VOC_NOX_PM25);
+DataProvider provider(lib, DataType::T_RH_CO2_VOC_NOX_PM25);
 
 void printModuleVersions() {
     uint16_t error;
@@ -19,7 +19,7 @@ void printModuleVersions() {
     unsigned char productName[32];
     uint8_t productNameSize = 32;
 
-    error = sen5x.getProductName(productName, productNameSize);
+    error = sen6x.getProductName(productName, productNameSize);
 
     if (error) {
         Serial.print("Error trying to execute getProductName(): ");
@@ -30,33 +30,33 @@ void printModuleVersions() {
         Serial.println((char*)productName);
     }
 
-    uint8_t firmwareMajor;
-    uint8_t firmwareMinor;
-    bool firmwareDebug;
-    uint8_t hardwareMajor;
-    uint8_t hardwareMinor;
-    uint8_t protocolMajor;
-    uint8_t protocolMinor;
+    // uint8_t firmwareMajor;
+    // uint8_t firmwareMinor;
+    // bool firmwareDebug;
+    // uint8_t hardwareMajor;
+    // uint8_t hardwareMinor;
+    // uint8_t protocolMajor;
+    // uint8_t protocolMinor;
 
-    error = sen5x.getVersion(firmwareMajor, firmwareMinor, firmwareDebug,
-                             hardwareMajor, hardwareMinor, protocolMajor,
-                             protocolMinor);
-    if (error) {
-        Serial.print("Error trying to execute getVersion(): ");
-        errorToString(error, errorMessage, 256);
-        Serial.println(errorMessage);
-    } else {
-        Serial.print("Firmware: ");
-        Serial.print(firmwareMajor);
-        Serial.print(".");
-        Serial.print(firmwareMinor);
-        Serial.print(", ");
+    // error = sen6x.getVersion(firmwareMajor, firmwareMinor, firmwareDebug,
+    //                          hardwareMajor, hardwareMinor, protocolMajor,
+    //                          protocolMinor);
+    // if (error) {
+    //     Serial.print("Error trying to execute getVersion(): ");
+    //     errorToString(error, errorMessage, 256);
+    //     Serial.println(errorMessage);
+    // } else {
+    //     Serial.print("Firmware: ");
+    //     Serial.print(firmwareMajor);
+    //     Serial.print(".");
+    //     Serial.print(firmwareMinor);
+    //     Serial.print(", ");
 
-        Serial.print("Hardware: ");
-        Serial.print(hardwareMajor);
-        Serial.print(".");
-        Serial.println(hardwareMinor);
-    }
+    //     Serial.print("Hardware: ");
+    //     Serial.print(hardwareMajor);
+    //     Serial.print(".");
+    //     Serial.println(hardwareMinor);
+    // }
 }
 
 void printSerialNumber() {
@@ -65,7 +65,7 @@ void printSerialNumber() {
     unsigned char serialNumber[32];
     uint8_t serialNumberSize = 32;
 
-    error = sen5x.getSerialNumber(serialNumber, serialNumberSize);
+    error = sen6x.getSerialNumber(serialNumber, serialNumberSize);
     if (error) {
         Serial.print("Error trying to execute getSerialNumber(): ");
         errorToString(error, errorMessage, 256);
@@ -94,9 +94,9 @@ void setup() {
     uint16_t error;
     char errorMessage[256];
 
-    sen5x.begin(Wire);
+    sen6x.begin(Wire, 0x6B);
 
-    error = sen5x.deviceReset();
+    error = sen6x.deviceReset();
     if (error) {
         Serial.print("Error trying to execute deviceReset(): ");
         errorToString(error, errorMessage, 256);
@@ -108,7 +108,7 @@ void setup() {
     printModuleVersions();
 
     // Start Measurement
-    error = sen5x.startMeasurement();
+    error = sen6x.startContinuousMeasurement();
 
     if (error) {
         Serial.print("Error trying to execute startMeasurement(): ");
@@ -139,11 +139,12 @@ void measure_and_report() {
     float ambientTemperature;
     float vocIndex;
     float noxIndex;
+    uint16_t co2;
 
-    error = sen5x.readMeasuredValues(
+    error = sen6x.readMeasuredValues(
         massConcentrationPm1p0, massConcentrationPm2p5, massConcentrationPm4p0,
         massConcentrationPm10p0, ambientHumidity, ambientTemperature, vocIndex,
-        noxIndex);
+        noxIndex, co2);
 
     if (error) {
         Serial.print("Error trying to execute "
@@ -169,6 +170,9 @@ void measure_and_report() {
         Serial.print("AmbientTemperature:");
         Serial.print(ambientTemperature);
         Serial.print("\t");
+        Serial.print("CO2:");
+        Serial.print(co2);
+        Serial.print("\t");
         Serial.print("VocIndex:");
         Serial.print(vocIndex);
         Serial.print("\t");
@@ -183,6 +187,7 @@ void measure_and_report() {
 
     provider.writeValueToCurrentSample(ambientTemperature, SignalType::TEMPERATURE_DEGREES_CELSIUS);
     provider.writeValueToCurrentSample(ambientHumidity, SignalType::RELATIVE_HUMIDITY_PERCENTAGE);
+    provider.writeValueToCurrentSample(co2, SignalType::CO2_PARTS_PER_MILLION);
     provider.writeValueToCurrentSample(vocIndex, SignalType::VOC_INDEX);
     provider.writeValueToCurrentSample(noxIndex, SignalType::NOX_INDEX);
     provider.writeValueToCurrentSample(massConcentrationPm2p5, SignalType::PM2P5_MICRO_GRAMM_PER_CUBIC_METER);
