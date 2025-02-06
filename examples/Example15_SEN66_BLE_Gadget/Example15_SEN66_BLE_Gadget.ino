@@ -88,7 +88,7 @@ void setup() {
     Serial.print("Sensirion GadgetBle Lib initialized with deviceId = ");
     Serial.println(provider.getDeviceIdString());
 
-    Wire.begin();
+    Wire.begin(6, 7);
 
     uint16_t error;
     char errorMessage[256];
